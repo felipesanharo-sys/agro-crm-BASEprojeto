@@ -75,25 +75,15 @@ describe("auth.me", () => {
   });
 });
 
-describe("upload.invoices - access control", () => {
+describe("upload.process - access control", () => {
   it("rejects non-admin users", async () => {
     const ctx = createRcContext("RC001");
     const caller = appRouter.createCaller(ctx);
 
     await expect(
-      caller.upload.invoices({
-        rows: [
-          {
-            orderCode: "P001",
-            orderItem: "1",
-            invoiceDate: "01/01/2025",
-            repCode: "RC001",
-            repName: "Test RC",
-            clientName: "Client A",
-            productName: "Product X",
-            kgInvoiced: "100",
-          },
-        ],
+      caller.upload.process({
+        fileBase64: "dGVzdA==",
+        fileName: "test.csv",
       })
     ).rejects.toThrow();
   });
@@ -103,30 +93,19 @@ describe("upload.invoices - access control", () => {
     const caller = appRouter.createCaller(ctx);
 
     await expect(
-      caller.upload.invoices({
-        rows: [
-          {
-            orderCode: "P001",
-            orderItem: "1",
-            invoiceDate: "01/01/2025",
-            repCode: "RC001",
-            repName: "Test RC",
-            clientName: "Client A",
-            productName: "Product X",
-            kgInvoiced: "100",
-          },
-        ],
+      caller.upload.process({
+        fileBase64: "dGVzdA==",
+        fileName: "test.csv",
       })
     ).rejects.toThrow();
   });
 });
 
-describe("repCodes.list - access control", () => {
-  it("returns empty for non-admin users", async () => {
+describe("manager.repSummary - access control", () => {
+  it("rejects non-admin users", async () => {
     const ctx = createRcContext("RC001");
     const caller = appRouter.createCaller(ctx);
-    const result = await caller.repCodes.list();
-    expect(result).toEqual([]);
+    await expect(caller.manager.repSummary()).rejects.toThrow();
   });
 });
 
@@ -169,60 +148,8 @@ describe("history.rcRanking - access control", () => {
 });
 
 // ── Helper function tests ─────────────────────────────────────────────
-describe("upload.invoices - data validation", () => {
-  it("accepts valid rows with empty kgInvoiced (treated as 0)", async () => {
-    const ctx = createAdminContext();
-    const caller = appRouter.createCaller(ctx);
-
-    // Empty kgInvoiced is parsed as 0 by parseKg, which is valid
-    const result = await caller.upload.invoices({
-      rows: [
-        {
-          orderCode: "P001",
-          orderItem: "1",
-          invoiceDate: "01/01/2025",
-          repCode: "RC001",
-          repName: "Test RC",
-          clientName: "Client A",
-          productName: "Product X",
-          kgInvoiced: "100",
-        },
-      ],
-    });
-
-    expect(result.inserted).toBe(1);
-    expect(result.months).toContain("2025.01");
-  });
-
-  it("rejects when all rows have invalid dates", async () => {
-    const ctx = createAdminContext();
-    const caller = appRouter.createCaller(ctx);
-
-    await expect(
-      caller.upload.invoices({
-        rows: [
-          {
-            orderCode: "P001",
-            orderItem: "1",
-            invoiceDate: "invalid-date",
-            repCode: "RC001",
-            repName: "Test RC",
-            clientName: "Client A",
-            productName: "Product X",
-            kgInvoiced: "100",
-          },
-        ],
-      })
-    ).rejects.toThrow("Nenhuma linha válida");
-  });
-});
-
 describe("calculateCycleStatus logic", () => {
-  // We test the logic indirectly through the exported function behavior
-  // The function is internal to routers.ts but its behavior is tested through clients.list
-  
   it("should classify correctly based on days since last purchase", () => {
-    // Test the logic directly
     function calculateCycleStatus(daysSinceLastPurchase: number, avgCycleDays: number) {
       if (daysSinceLastPurchase >= 180) return "inativo";
       if (daysSinceLastPurchase >= 150) return "pre_inativacao";

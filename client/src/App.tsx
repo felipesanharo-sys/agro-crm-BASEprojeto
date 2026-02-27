@@ -4,28 +4,45 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Aceleracao from "./pages/Aceleracao";
-import Clientes from "./pages/Clientes";
-import Configuracoes from "./pages/Configuracoes";
-import Convite from "./pages/Convite";
-import Historico from "./pages/Historico";
+import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
-import Produtos from "./pages/Produtos";
-import Upload from "./pages/Upload";
+import ClientsPage from "./pages/ClientsPage";
+import ProductsPage from "./pages/ProductsPage";
+import UploadPage from "./pages/UploadPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import SettingsPage from "./pages/SettingsPage";
+import HistoryPage from "./pages/HistoryPage";
+import AceleracaoPage from "./pages/AceleracaoPage";
+import UsersPage from "./pages/UsersPage";
+import InvitePage from "./pages/InvitePage";
+import { usePageTracker } from "./hooks/usePageTracker";
+
+function DashboardRoutes() {
+  usePageTracker();
+  return (
+    <DashboardLayout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/clientes" component={ClientsPage} />
+        <Route path="/produtos" component={ProductsPage} />
+        <Route path="/historico" component={HistoryPage} />
+        <Route path="/aceleracao" component={AceleracaoPage} />
+        <Route path="/upload" component={UploadPage} />
+        <Route path="/notificacoes" component={NotificationsPage} />
+        <Route path="/configuracoes" component={SettingsPage} />
+        <Route path="/usuarios" component={UsersPage} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </DashboardLayout>
+  );
+}
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/upload" component={Upload} />
-      <Route path="/clientes" component={Clientes} />
-      <Route path="/historico" component={Historico} />
-      <Route path="/aceleracao" component={Aceleracao} />
-      <Route path="/produtos" component={Produtos} />
-      <Route path="/configuracoes" component={Configuracoes} />
-      <Route path="/convite/:token" component={Convite} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
+      <Route path="/convite/:token" component={InvitePage} />
+      <Route component={DashboardRoutes} />
     </Switch>
   );
 }
@@ -35,7 +52,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
-          <Toaster />
+          <Toaster richColors position="top-right" />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
