@@ -151,11 +151,22 @@ export const appRouter = router({
       if (!d) return [];
       const { sql } = await import("drizzle-orm");
       const rows = await d.execute(sql`SELECT repCode, alias, parentRepCode FROM rep_aliases ORDER BY alias`);
-      return ((rows as any)[0] || []).map((r: any) => ({
+      const aliases = ((rows as any)[0] || []);
+      if (aliases.length > 0) {
+        return aliases.map((r: any) => ({
+          repCode: r.repCode,
+          alias: r.alias,
+          repName: r.alias,
+          parentRepCode: r.parentRepCode || null,
+        }));
+      }
+      // Fallback: get reps from invoices when rep_aliases is empty
+      const reps = await db.getDistinctRepCodesFromInvoices();
+      return reps.map((r: any) => ({
         repCode: r.repCode,
-        alias: r.alias,
-        repName: r.alias,
-        parentRepCode: r.parentRepCode || null,
+        alias: r.repName,
+        repName: r.repName,
+        parentRepCode: null,
       }));
     }),
   }),
