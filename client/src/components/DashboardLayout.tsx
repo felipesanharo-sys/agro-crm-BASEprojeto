@@ -24,9 +24,9 @@ import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { trpc } from "@/lib/trpc";
 import {
-  Users, Package, TrendingUp, Rocket,
-  Upload, Bell, LogOut, PanelLeft, Settings, ChevronRight,
-  Shield, BarChart3, History, UserCog
+  Users, Package,
+  Upload, Bell, LogOut, PanelLeft, Settings,
+  Shield, BarChart3, History, UserCog, Rocket, Mail
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -35,18 +35,21 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 
 const rcMenuItems = [
+  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: History, label: "Histórico", path: "/historico" },
-  { icon: Rocket, label: "Aceleração", path: "/aceleracao" },
   { icon: Package, label: "Produtos", path: "/produtos" },
+  { icon: Rocket, label: "Aceleração", path: "/aceleracao" },
 ];
 
 const managerMenuItems = [
+  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: History, label: "Histórico", path: "/historico" },
-  { icon: Rocket, label: "Aceleração", path: "/aceleracao" },
   { icon: Package, label: "Produtos", path: "/produtos" },
+  { icon: Rocket, label: "Aceleração", path: "/aceleracao" },
   { icon: Upload, label: "Upload", path: "/upload" },
+  { icon: Mail, label: "Convites", path: "/convites" },
   { icon: UserCog, label: "Usuários", path: "/usuarios" },
 ];
 
@@ -76,7 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
               <BarChart3 className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-center">Agro CRM BA03</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-center">Agro CRM GNE</h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
               Gestão inteligente de ciclo de compras B2B no agronegócio
             </p>
@@ -144,10 +147,10 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
     };
   }, [isResizing, setSidebarWidth]);
 
-  // Redirect to first page if on root
+  // Redirect to dashboard if on root
   useEffect(() => {
     if (location === "/") {
-      setLocation("/clientes");
+      setLocation("/dashboard");
     }
   }, [location, isAdmin, setLocation]);
 
@@ -258,7 +261,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: { children: React
                   <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <BarChart3 className="h-3.5 w-3.5 text-primary" />
                   </div>
-                  <span className="font-semibold tracking-tight truncate text-sm">Agro CRM</span>
+                  <span className="font-semibold tracking-tight truncate text-sm">Agro CRM GNE</span>
                 </div>
               )}
             </div>

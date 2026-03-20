@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/clientes");
+      setLocation("/dashboard");
     }
   }, [user, setLocation]);
 

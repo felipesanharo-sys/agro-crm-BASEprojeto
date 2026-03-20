@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, bigint, decimal, uniqueIndex, index } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, uniqueIndex, index } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -97,7 +97,7 @@ export const notifications = mysqlTable("notifications", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   repCode: varchar("repCode", { length: 32 }),
-  type: mysqlEnum("type", ["cycle_alert", "inactivity_warning", "new_client", "general", "status_change"]).notNull(),
+  type: mysqlEnum("type", ["cycle_alert", "inactivity_warning", "new_client", "general", "status_change", "funnel_change"]).notNull(),
   title: varchar("title", { length: 256 }).notNull(),
   message: text("message"),
   clientCodeSAP: varchar("clientCodeSAP", { length: 32 }),
@@ -173,6 +173,21 @@ export const rcInvites = mysqlTable("rc_invites", {
 
 export type RcInvite = typeof rcInvites.$inferSelect;
 export type InsertRcInvite = typeof rcInvites.$inferInsert;
+
+// Manager/Admin invites for onboarding gestores
+export const managerInvites = mysqlTable("manager_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  usedAt: timestamp("usedAt"),
+  usedByUserId: int("usedByUserId"),
+}, (table) => [
+  index("idx_manager_invite_token").on(table.token),
+  index("idx_manager_invite_date").on(table.createdAt),
+]);
+
+export type ManagerInvite = typeof managerInvites.$inferSelect;
+export type InsertManagerInvite = typeof managerInvites.$inferInsert;
 
 // Page view tracking for user activity monitoring
 export const pageViews = mysqlTable("page_views", {

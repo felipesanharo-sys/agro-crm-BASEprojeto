@@ -3,9 +3,10 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { StatusBadge } from "@/components/StatusBadge";
+import StatusBadge from "@/components/StatusBadge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, Users, Package, Clock, MapPin, Calendar } from "lucide-react";
+import { usePageTracker } from "@/hooks/usePageTracker";
 
 const STATUS_COLORS: Record<string, string> = {
   ativo: "#4ade80",
@@ -97,6 +98,7 @@ function ClientsByStatusDialog({ statusFilter, onClose }: { statusFilter: string
 
 // ---- Main Dashboard Page ----
 export default function DashboardPage() {
+  usePageTracker("dashboard");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
 
   const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery(undefined, { staleTime: 60000 });

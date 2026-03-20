@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "af7a5a34-8268-41dd-b251-9ab606c0bf5f",
-  "prevId": "b5a98a33-7b41-4326-b4a9-63657300c74d",
+  "id": "1789ae5f-57ea-4275-9191-3941e52b7754",
+  "prevId": "034aa4fb-a716-4428-89e0-30f89642259a",
   "tables": {
     "client_actions": {
       "name": "client_actions",
@@ -464,6 +464,81 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "manager_invites": {
+      "name": "manager_invites",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "token": {
+          "name": "token",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "usedAt": {
+          "name": "usedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "usedByUserId": {
+          "name": "usedByUserId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_manager_invite_token": {
+          "name": "idx_manager_invite_token",
+          "columns": [
+            "token"
+          ],
+          "isUnique": false
+        },
+        "idx_manager_invite_date": {
+          "name": "idx_manager_invite_date",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "manager_invites_id": {
+          "name": "manager_invites_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "manager_invites_token_unique": {
+          "name": "manager_invites_token_unique",
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
     "notifications": {
       "name": "notifications",
       "columns": {
@@ -490,7 +565,7 @@
         },
         "type": {
           "name": "type",
-          "type": "enum('cycle_alert','inactivity_warning','new_client','general','status_change')",
+          "type": "enum('cycle_alert','inactivity_warning','new_client','general','status_change','funnel_change')",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

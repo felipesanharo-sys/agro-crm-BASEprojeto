@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "b5a98a33-7b41-4326-b4a9-63657300c74d",
-  "prevId": "702ff323-1a1c-4f4a-9478-8eb116399c43",
+  "id": "034aa4fb-a716-4428-89e0-30f89642259a",
+  "prevId": "6c248bfa-b469-45d6-be30-5392fd33fba8",
   "tables": {
     "client_actions": {
       "name": "client_actions",
@@ -66,8 +66,8 @@
         }
       },
       "indexes": {
-        "idx_ca_client": {
-          "name": "idx_ca_client",
+        "idx_client_action": {
+          "name": "idx_client_action",
           "columns": [
             "clientCodeSAP",
             "repCode"
@@ -118,6 +118,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "year": {
+          "name": "year",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "yearMonth": {
           "name": "yearMonth",
           "type": "varchar(10)",
@@ -125,11 +132,46 @@
           "notNull": false,
           "autoincrement": false
         },
-        "repCode": {
-          "name": "repCode",
-          "type": "varchar(32)",
+        "month": {
+          "name": "month",
+          "type": "varchar(4)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "origin": {
+          "name": "origin",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "regionalManagement": {
+          "name": "regionalManagement",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "districtManagement": {
+          "name": "districtManagement",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "supervision": {
+          "name": "supervision",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "microRegion": {
+          "name": "microRegion",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "repName": {
@@ -139,8 +181,36 @@
           "notNull": true,
           "autoincrement": false
         },
+        "repCode": {
+          "name": "repCode",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "repStatus": {
+          "name": "repStatus",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientCodeDatasul": {
+          "name": "clientCodeDatasul",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "clientCodeSAP": {
           "name": "clientCodeSAP",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientGroupCodeSAP": {
+          "name": "clientGroupCodeSAP",
           "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false,
@@ -153,9 +223,86 @@
           "notNull": true,
           "autoincrement": false
         },
+        "clientParentName": {
+          "name": "clientParentName",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientCity": {
+          "name": "clientCity",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientState": {
+          "name": "clientState",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientAddress": {
+          "name": "clientAddress",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientPhone": {
+          "name": "clientPhone",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientDocument": {
+          "name": "clientDocument",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "atcResponsible": {
+          "name": "atcResponsible",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "salesChannel": {
           "name": "salesChannel",
           "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "salesChannelGroup": {
+          "name": "salesChannelGroup",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pittClassification": {
+          "name": "pittClassification",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "productCodeDatasul": {
+          "name": "productCodeDatasul",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "productCodeSAP": {
+          "name": "productCodeSAP",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -165,6 +312,41 @@
           "type": "varchar(256)",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "productCategory": {
+          "name": "productCategory",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "productTechnological": {
+          "name": "productTechnological",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "productProgram": {
+          "name": "productProgram",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "specialFormula": {
+          "name": "specialFormula",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "freightType": {
+          "name": "freightType",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "kgInvoiced": {
@@ -180,42 +362,92 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "revenueWithTax": {
+          "name": "revenueWithTax",
+          "type": "decimal(14,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reference": {
+          "name": "reference",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "implantationDate": {
+          "name": "implantationDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "priceFixDate": {
+          "name": "priceFixDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "precisionFarming": {
+          "name": "precisionFarming",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "uploadId": {
+          "name": "uploadId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
         }
       },
       "indexes": {
-        "idx_inv_order": {
-          "name": "idx_inv_order",
+        "idx_order": {
+          "name": "idx_order",
           "columns": [
             "orderCode",
             "orderItem"
           ],
           "isUnique": false
         },
-        "idx_inv_rep": {
-          "name": "idx_inv_rep",
+        "idx_rep": {
+          "name": "idx_rep",
           "columns": [
             "repCode"
           ],
           "isUnique": false
         },
-        "idx_inv_client": {
-          "name": "idx_inv_client",
+        "idx_client": {
+          "name": "idx_client",
           "columns": [
             "clientCodeSAP"
           ],
           "isUnique": false
         },
-        "idx_inv_date": {
-          "name": "idx_inv_date",
+        "idx_date": {
+          "name": "idx_date",
           "columns": [
             "invoiceDate"
           ],
           "isUnique": false
         },
-        "idx_inv_ym": {
-          "name": "idx_inv_ym",
+        "idx_product": {
+          "name": "idx_product",
           "columns": [
-            "yearMonth"
+            "productCodeSAP"
           ],
           "isUnique": false
         }
@@ -224,6 +456,178 @@
       "compositePrimaryKeys": {
         "invoices_id": {
           "name": "invoices_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "notifications": {
+      "name": "notifications",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "repCode": {
+          "name": "repCode",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('cycle_alert','inactivity_warning','new_client','general','status_change','funnel_change')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientCodeSAP": {
+          "name": "clientCodeSAP",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "clientName": {
+          "name": "clientName",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isRead": {
+          "name": "isRead",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idx_notif_user": {
+          "name": "idx_notif_user",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "idx_notif_rep": {
+          "name": "idx_notif_rep",
+          "columns": [
+            "repCode"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "notifications_id": {
+          "name": "notifications_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "page_views": {
+      "name": "page_views",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "page": {
+          "name": "page",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idx_pv_user": {
+          "name": "idx_pv_user",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "idx_pv_page": {
+          "name": "idx_pv_page",
+          "columns": [
+            "page"
+          ],
+          "isUnique": false
+        },
+        "idx_pv_date": {
+          "name": "idx_pv_date",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "page_views_id": {
+          "name": "page_views_id",
           "columns": [
             "id"
           ]
@@ -358,6 +762,23 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
         }
       },
       "indexes": {},
@@ -410,6 +831,23 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
         }
       },
       "indexes": {
@@ -426,6 +864,91 @@
       "compositePrimaryKeys": {
         "sales_goals_id": {
           "name": "sales_goals_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "upload_logs": {
+      "name": "upload_logs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fileName": {
+          "name": "fileName",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rowsProcessed": {
+          "name": "rowsProcessed",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "rowsInserted": {
+          "name": "rowsInserted",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "rowsDuplicate": {
+          "name": "rowsDuplicate",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('processing','completed','error')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'processing'"
+        },
+        "errorMessage": {
+          "name": "errorMessage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "upload_logs_id": {
+          "name": "upload_logs_id",
           "columns": [
             "id"
           ]

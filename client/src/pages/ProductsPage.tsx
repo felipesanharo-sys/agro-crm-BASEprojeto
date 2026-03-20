@@ -1,269 +1,154 @@
-import { useState, useMemo } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, MapPin, Package, Calendar, Users, ArrowLeft, DollarSign, Weight, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMemo, useState } from "react";
+import { Package, Search, ChevronRight } from "lucide-react";
 
-const formatKg = (kg: number) => Number(kg).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-const formatCurrency = (v: number) => (!v ? "R$ 0" : `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-const formatDate = (d: any) => d ? new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+function formatKg(val: number) { return val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val.toFixed(0); }
 
-// ---- Product aggregation: group by product name ----
-function aggregateProducts(items: any[]) {
-  const map = new Map<string, { productName: string; productCategory: string; totalKg: number; totalRevenue: number; orderCount: number; lastSale: string | null; clientCount: number; clients: Set<string> }>();
-  for (const item of items) {
-    const key = item.productName;
-    const existing = map.get(key);
-    if (existing) {
-      existing.totalKg += Number(item.totalKg) || 0;
-      existing.totalRevenue += Number(item.totalRevenue) || 0;
-      existing.orderCount += Number(item.orderCount) || 0;
-      if (item.lastSale && (!existing.lastSale || new Date(item.lastSale) > new Date(existing.lastSale))) {
-        existing.lastSale = item.lastSale;
-      }
-      existing.clients.add(item.clientCodeSAP);
-      existing.clientCount = existing.clients.size;
-    } else {
-      const clients = new Set<string>();
-      clients.add(item.clientCodeSAP);
-      map.set(key, {
-        productName: item.productName,
-        productCategory: item.productCategory || "",
-        totalKg: Number(item.totalKg) || 0,
-        totalRevenue: Number(item.totalRevenue) || 0,
-        orderCount: Number(item.orderCount) || 0,
-        lastSale: item.lastSale,
-        clientCount: 1,
-        clients,
-      });
-    }
-  }
-  return Array.from(map.values()).sort((a, b) => b.totalKg - a.totalKg);
-}
-
-// ---- Clients by Product Dialog ----
-function ClientsByProductDialog({ productName, onClose }: { productName: string; onClose: () => void }) {
-  const { data: clients, isLoading } = trpc.products.clientsByProduct.useQuery(
-    { productName },
-    { staleTime: 60000 }
-  );
-
-  return (
-    <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-base flex items-center gap-2">
-            <Package className="h-4 w-4 text-primary" />
-            <span className="truncate">{productName}</span>
-          </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">Clientes que compraram este produto</p>
-        </DialogHeader>
-
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
-          </div>
-        ) : !clients || clients.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Nenhum cliente encontrado</p>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground mb-2">{clients.length} cliente{clients.length !== 1 ? "s" : ""}</p>
-            {/* Summary header */}
-            <div className="grid grid-cols-4 gap-2 mb-3">
-              <div className="bg-muted/50 rounded-lg p-2 text-center">
-                <p className="text-[10px] uppercase text-muted-foreground font-medium">Clientes</p>
-                <p className="text-sm font-bold mt-0.5">{clients.length}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg p-2 text-center">
-                <p className="text-[10px] uppercase text-muted-foreground font-medium">Total KG</p>
-                <p className="text-sm font-bold mt-0.5 text-primary">{formatKg(clients.reduce((s: number, c: any) => s + Number(c.totalKg || 0), 0))}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg p-2 text-center">
-                <p className="text-[10px] uppercase text-muted-foreground font-medium">Total R$</p>
-                <p className="text-sm font-bold mt-0.5">{formatCurrency(clients.reduce((s: number, c: any) => s + Number(c.totalRevenue || 0), 0))}</p>
-              </div>
-              <div className="bg-muted/50 rounded-lg p-2 text-center">
-                <p className="text-[10px] uppercase text-muted-foreground font-medium">R$/KG</p>
-                <p className="text-sm font-bold mt-0.5">{(() => {
-                  const totalKg = clients.reduce((s: number, c: any) => s + Number(c.totalKg || 0), 0);
-                  const totalRev = clients.reduce((s: number, c: any) => s + Number(c.totalRevenue || 0), 0);
-                  return totalKg > 0 ? formatCurrency(totalRev / totalKg) : "—";
-                })()}</p>
-              </div>
-            </div>
-
-            {/* Client list table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="text-left py-2 px-2 font-medium text-muted-foreground">Cliente</th>
-                    <th className="text-right py-2 px-2 font-medium text-muted-foreground">KG</th>
-                    <th className="text-right py-2 px-2 font-medium text-muted-foreground">R$</th>
-                    <th className="text-right py-2 px-2 font-medium text-muted-foreground">R$/KG</th>
-                    <th className="text-right py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Pedidos</th>
-                    <th className="text-right py-2 px-2 font-medium text-muted-foreground hidden sm:table-cell">Última</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((c: any, idx: number) => (
-                    <tr key={idx} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="py-2 px-2">
-                        <div className="font-medium truncate max-w-[160px]">{c.clientName}</div>
-                        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {c.clientCity}{c.clientState ? ` / ${c.clientState}` : ""}
-                        </div>
-                        {c.repName && (
-                          <div className="text-[10px] text-muted-foreground">RC: {c.repName}</div>
-                        )}
-                      </td>
-                      <td className="py-2 px-2 text-right font-semibold">{formatKg(Number(c.totalKg))}</td>
-                      <td className="py-2 px-2 text-right">{formatCurrency(Number(c.totalRevenue))}</td>
-                      <td className="py-2 px-2 text-right font-medium text-primary">{formatCurrency(Number(c.pricePerKg))}</td>
-                      <td className="py-2 px-2 text-right hidden sm:table-cell">{Number(c.orderCount)}</td>
-                      <td className="py-2 px-2 text-right hidden sm:table-cell">{formatDate(c.lastPurchaseDate)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ---- Main Page ----
 export default function ProductsPage() {
-  const [productFilter, setProductFilter] = useState("");
-  const [channelFilter, setChannelFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("");
-  const [microRegionFilter, setMicroRegionFilter] = useState("all");
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [selectedRepCode, setSelectedRepCode] = useState<string | undefined>(undefined);
+  const [channelFilter, setChannelFilter] = useState<string | undefined>(undefined);
+  const [cityFilter, setCityFilter] = useState<string | undefined>(undefined);
+  const [microRegionFilter, setMicroRegionFilter] = useState<string | undefined>(undefined);
+  const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
-  const { data: filters } = trpc.products.filters.useQuery();
-  const { data: products, isLoading } = trpc.products.list.useQuery({
-    product: productFilter || undefined,
-    channel: channelFilter !== "all" ? channelFilter : undefined,
-    city: cityFilter || undefined,
-    microRegion: microRegionFilter !== "all" ? microRegionFilter : undefined,
-  }, { staleTime: 60000 });
+  const repsQuery = trpc.repAliases.list.useQuery();
+  const repCode = isAdmin ? selectedRepCode : undefined;
+  const filtersQuery = trpc.products.filters.useQuery();
+  const analysisQuery = trpc.products.list.useQuery({
+    channel: channelFilter, city: cityFilter, microRegion: microRegionFilter,
+  });
+  const clientsQuery = trpc.products.clientsByProduct.useQuery(
+    { productName: selectedProduct! },
+    { enabled: !!selectedProduct }
+  );
 
-  const aggregated = useMemo(() => {
-    if (!products) return [];
-    return aggregateProducts(products as any[]);
-  }, [products]);
+  const filtered = useMemo(() => {
+    if (!analysisQuery.data) return [];
+    let list = analysisQuery.data as any[];
+    if (search) {
+      const s = search.toLowerCase();
+      list = list.filter((p: any) => p.productName?.toLowerCase().includes(s));
+    }
+    return list.sort((a: any, b: any) => Number(b.totalKg) - Number(a.totalKg));
+  }, [analysisQuery.data, search]);
+
+  const filters = filtersQuery.data || { channels: [], cities: [], microRegions: [] };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">Produtos</h1>
-        <p className="text-sm text-muted-foreground">Análise de vendas por produto — clique para ver os clientes</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Package className="h-6 w-6 text-primary" />Produtos
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Análise de volume, preço médio e clientes por produto</p>
+        </div>
+        {isAdmin && repsQuery.data && (
+          <Select value={selectedRepCode || "all"} onValueChange={(v) => setSelectedRepCode(v === "all" ? undefined : v)}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Todos os RCs" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os RCs</SelectItem>
+              {repsQuery.data.map((r: any) => <SelectItem key={r.repCode} value={r.repCode}>{r.alias || r.repName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar produto..." value={productFilter} onChange={e => setProductFilter(e.target.value)} className="pl-9 h-9" />
-        </div>
-        <Select value={channelFilter} onValueChange={setChannelFilter}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Canal" /></SelectTrigger>
+      <div className="flex flex-wrap gap-2">
+        <Select value={channelFilter || "all"} onValueChange={(v) => setChannelFilter(v === "all" ? undefined : v)}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Canal" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os canais</SelectItem>
-            {filters?.channels?.map((c: string) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            <SelectItem value="all">Todos Canais</SelectItem>
+            {(filters.channels || []).map((c: any) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar cidade..." value={cityFilter} onChange={e => setCityFilter(e.target.value)} className="pl-9 h-9" />
-        </div>
-        <Select value={microRegionFilter} onValueChange={setMicroRegionFilter}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Microrregião" /></SelectTrigger>
+        <Select value={cityFilter || "all"} onValueChange={(v) => setCityFilter(v === "all" ? undefined : v)}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Cidade" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas microrregiões</SelectItem>
-            {filters?.microRegions?.map((m: string) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            <SelectItem value="all">Todas Cidades</SelectItem>
+            {(filters.cities || []).map((c: any) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={microRegionFilter || "all"} onValueChange={(v) => setMicroRegionFilter(v === "all" ? undefined : v)}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Microrregião" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas Microrregiões</SelectItem>
+            {(filters.microRegions || []).map((c: any) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      {!isLoading && (
-        <p className="text-xs text-muted-foreground">{aggregated.length} produto{aggregated.length !== 1 ? "s" : ""}</p>
-      )}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Buscar produto..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+      </div>
 
-      {/* Product results */}
-      <div className="space-y-2">
-        {isLoading ? (
-          Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
-          ))
-        ) : !aggregated.length ? (
-          <Card><CardContent className="p-8 text-center text-muted-foreground">Nenhum resultado encontrado</CardContent></Card>
-        ) : (
-          aggregated.map((item, i) => {
-            const pricePerKg = item.totalKg > 0 ? item.totalRevenue / item.totalKg : 0;
-            return (
-              <Card
-                key={i}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedProduct(item.productName)}
-              >
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm">{item.productName}</span>
-                        {item.productCategory && (
-                          <span className="text-[10px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded">{item.productCategory}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {item.clientCount} cliente{item.clientCount !== 1 ? "s" : ""}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Package className="h-3 w-3" />
-                          {item.orderCount} pedido{item.orderCount > 1 ? "s" : ""}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(item.lastSale)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs">
-                        <span className="flex items-center gap-1">
-                          <Weight className="h-3 w-3 text-muted-foreground" />
-                          <span className="font-semibold text-primary">{formatKg(item.totalKg)} kg</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3 text-muted-foreground" />
-                          <span className="font-medium">{formatCurrency(item.totalRevenue)}</span>
-                        </span>
-                        <span className="text-muted-foreground">
-                          R$/KG: <span className="font-medium text-foreground">{formatCurrency(pricePerKg)}</span>
-                        </span>
-                      </div>
+      <Card className="border shadow-sm">
+        <CardHeader><CardTitle className="text-base">Produtos ({filtered.length})</CardTitle></CardHeader>
+        <CardContent>
+          {analysisQuery.isLoading ? <Skeleton className="h-48" /> : (
+            <div className="space-y-2">
+              {filtered.map((p: any, i: number) => {
+                const pricePerKg = Number(p.totalKg) > 0 ? Number(p.totalRevenue) / Number(p.totalKg) : 0;
+                return (
+                  <div key={`${p.productName}-${i}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setSelectedProduct(p.productName)}>
+                    <span className="text-sm font-bold text-muted-foreground w-8">#{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{p.productName}</p>
+                      <p className="text-xs text-muted-foreground">{p.clientCount} clientes | R$ {pricePerKg.toFixed(2)}/kg</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-2" />
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold">{formatKg(Number(p.totalKg))} kg</p>
+                      <p className="text-xs text-muted-foreground">R$ {Number(p.totalRevenue).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
+                );
+              })}
+              {filtered.length === 0 && <p className="text-center text-muted-foreground py-8">Nenhum produto encontrado</p>}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Client by product dialog */}
-      {selectedProduct && (
-        <ClientsByProductDialog productName={selectedProduct} onClose={() => setSelectedProduct(null)} />
-      )}
+      {/* Product Clients Dialog */}
+      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogHeader><DialogTitle>Clientes - {selectedProduct}</DialogTitle></DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            {clientsQuery.isLoading ? <Skeleton className="h-32" /> : (
+              <div className="space-y-2">
+                {(clientsQuery.data || []).map((c: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">{c.clientName}</p>
+                      <p className="text-xs text-muted-foreground">{c.clientCity}/{c.clientState} - {c.repName}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{formatKg(Number(c.totalKg))} kg</p>
+                      <p className="text-xs text-muted-foreground">R$ {Number(c.totalRevenue).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}</p>
+                    </div>
+                  </div>
+                ))}
+                {(clientsQuery.data || []).length === 0 && <p className="text-center text-muted-foreground py-4">Sem clientes</p>}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

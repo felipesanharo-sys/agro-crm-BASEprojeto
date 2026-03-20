@@ -170,6 +170,7 @@
     }
   }
 
+  /* Status badge colors */
   .status-ativo {
     background-color: oklch(0.92 0.08 145);
     color: oklch(0.35 0.12 145);

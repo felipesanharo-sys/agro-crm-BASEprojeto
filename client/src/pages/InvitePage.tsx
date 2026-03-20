@@ -1,190 +1,87 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { BarChart3, CheckCircle2, Loader2, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { getLoginUrl } from "@/const";
+import { useParams, useLocation } from "wouter";
+import { Loader2, CheckCircle, XCircle, Wheat, Shield } from "lucide-react";
 
-export default function InvitePage() {
+export default function InviteAcceptPage() {
   const { token } = useParams<{ token: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
-  const [accepted, setAccepted] = useState(false);
 
-  const { data: invite, isLoading: inviteLoading } = trpc.invites.getByToken.useQuery(
-    { token: token || "" },
-    { enabled: !!token }
-  );
-
-  const acceptMutation = trpc.invites.accept.useMutation({
-    onSuccess: (data) => {
-      setAccepted(true);
-      // Redirect to main page after 2 seconds
-      setTimeout(() => {
-        window.location.href = "/clientes";
-      }, 2000);
-    },
+  // Try RC invite first, then manager invite
+  const rcValidateQuery = trpc.invites.getByToken.useQuery({ token: token || "" }, { enabled: !!token });
+  const managerValidateQuery = trpc.managerInvites.getByToken.useQuery({ token: token || "" }, { enabled: !!token && !rcValidateQuery.data });
+  
+  const rcAcceptMutation = trpc.invites.accept.useMutation({
+    onSuccess: () => { setTimeout(() => setLocation("/"), 2000); },
+  });
+  const managerAcceptMutation = trpc.managerInvites.accept.useMutation({
+    onSuccess: () => { setTimeout(() => setLocation("/"), 2000); },
   });
 
-  // Auto-accept when user is logged in and invite is valid
-  useEffect(() => {
-    if (user && invite && !invite.used && !accepted && !acceptMutation.isPending && !acceptMutation.isError) {
-      acceptMutation.mutate({ token: token || "" });
-    }
-  }, [user, invite, token, accepted]);
+  // Determine which type of invite this is
+  const isManagerInvite = managerValidateQuery.data?.isManager;
+  const isRcInvite = rcValidateQuery.data && !isManagerInvite;
+  const validateQuery = isManagerInvite ? managerValidateQuery : rcValidateQuery;
+  const acceptMutation = isManagerInvite ? managerAcceptMutation : rcAcceptMutation;
 
-  if (authLoading || inviteLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Carregando convite...</p>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  // Invalid or expired invite
-  if (!invite) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 flex flex-col items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <XCircle className="h-8 w-8 text-destructive" />
-            </div>
-            <h2 className="text-xl font-bold">Convite Inválido</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              Este link de convite não é válido ou já expirou.
-            </p>
-            <Button variant="outline" onClick={() => setLocation("/")}>
-              Ir para o início
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Already used invite
-  if (invite.used && !accepted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 flex flex-col items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-amber-600" />
-            </div>
-            <h2 className="text-xl font-bold">Convite Já Utilizado</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              Este convite já foi aceito por outro usuário.
-            </p>
-            <Button onClick={() => setLocation("/clientes")}>
-              Acessar o sistema
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Successfully accepted
-  if (accepted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 flex flex-col items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-xl font-bold">Bem-vindo!</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              {invite.isGestor
-                ? <>Você foi registrado como <strong>Gestor</strong> com visão completa. Redirecionando...</>
-                : <>Você foi vinculado ao RC <strong>{invite.alias}</strong> com sucesso. Redirecionando...</>
-              }
-            </p>
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Error accepting
-  if (acceptMutation.isError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-8 flex flex-col items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <XCircle className="h-8 w-8 text-destructive" />
-            </div>
-            <h2 className="text-xl font-bold">Erro ao Aceitar</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              {acceptMutation.error?.message || "Não foi possível aceitar o convite."}
-            </p>
-            <Button variant="outline" onClick={() => setLocation("/")}>
-              Ir para o início
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // User not logged in - show invite info + login button
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-        <Card className="w-full max-w-md mx-4">
-          <CardHeader className="text-center pb-2">
-            <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <CardTitle className="text-xl">Convite para Agro CRM</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4 pt-2">
-            <p className="text-sm text-muted-foreground text-center">
-              {invite.isGestor
-                ? 'Você foi convidado como Gestor com visão completa do sistema'
-                : 'Você foi convidado como representante comercial'
-              }
-            </p>
-            <div className="bg-primary/5 rounded-lg px-4 py-3 w-full text-center">
-              <p className="text-xs text-muted-foreground">{invite.isGestor ? 'Perfil' : 'Representante'}</p>
-              <p className="text-lg font-bold text-primary">{invite.alias}</p>
-            </div>
-            <Button
-              onClick={() => {
-                // Store token in sessionStorage so we can accept after login
-                sessionStorage.setItem("invite_token", token || "");
-                window.location.href = getLoginUrl(`/convite/${token}`);
-              }}
-              size="lg"
-              className="w-full shadow-lg hover:shadow-xl transition-all font-medium"
-            >
-              Entrar e aceitar convite
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Accepting in progress
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/10">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="p-8 flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Aceitando convite...</p>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="max-w-md w-full mx-4 border shadow-lg">
+        <CardContent className="p-8 text-center space-y-4">
+          <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+            {isManagerInvite ? <Shield className="h-7 w-7 text-primary" /> : <Wheat className="h-7 w-7 text-primary" />}
+          </div>
+          <h1 className="text-xl font-bold">Agro CRM GNE</h1>
+
+          {rcValidateQuery.isLoading || managerValidateQuery.isLoading ? (
+            <div className="space-y-2">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+              <p className="text-sm text-muted-foreground">Validando convite...</p>
+            </div>
+          ) : !validateQuery.data || validateQuery.data.used ? (
+            <div className="space-y-2">
+              <XCircle className="h-10 w-10 mx-auto text-destructive" />
+              <p className="text-sm text-muted-foreground">Convite inválido ou já utilizado.</p>
+              <Button onClick={() => setLocation("/")} variant="outline">Ir para o início</Button>
+            </div>
+          ) : !user ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Você foi convidado como <strong>{isManagerInvite ? "Gestor" : `RC ${(validateQuery.data as any).repCode}`}</strong>. Faça login para aceitar.
+              </p>
+              <Button onClick={() => { window.location.href = getLoginUrl(); }} className="w-full">
+                Fazer Login
+              </Button>
+            </div>
+          ) : acceptMutation.isSuccess ? (
+            <div className="space-y-2">
+              <CheckCircle className="h-10 w-10 mx-auto text-emerald-500" />
+              <p className="text-sm font-medium text-emerald-600">Convite aceito com sucesso!</p>
+              <p className="text-xs text-muted-foreground">Redirecionando...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Olá, <strong>{user.name}</strong>! Aceite o convite para vincular-se como <strong>{isManagerInvite ? "Gestor" : `RC ${(validateQuery.data as any).repCode}`}</strong>.
+              </p>
+              <Button onClick={() => acceptMutation.mutate({ token: token || "" })} disabled={acceptMutation.isPending} className="w-full">
+                {acceptMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Aceitando...</> : "Aceitar Convite"}
+              </Button>
+              {acceptMutation.isError && <p className="text-xs text-destructive">{acceptMutation.error.message}</p>}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
