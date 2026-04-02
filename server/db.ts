@@ -560,7 +560,7 @@ export async function getRepAliases() {
 export async function upsertRepAlias(data: { repCode: string; repName: string; alias: string; parentRepCode?: string; neCode?: string }) {
   const db = await getDb(); if (!db) throw new Error("DB not available");
   await db.insert(repAliases).values(data as any).onDuplicateKeyUpdate({
-    set: { repName: data.repName, alias: data.alias, parentRepCode: data.parentRepCode || null, neCode: data.neCode || null },
+    set: { repName: data.repName, alias: data.alias, parentRepCode: data.parentRepCode || undefined, neCode: data.neCode || undefined },
   });
 }
 
