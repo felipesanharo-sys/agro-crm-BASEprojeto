@@ -8,6 +8,7 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   repCode: varchar("repCode", { length: 32 }),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -19,6 +20,7 @@ export type InsertUser = typeof users.$inferInsert;
 // Invoice lines from uploaded spreadsheets
 export const invoices = mysqlTable("invoices", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   orderCode: varchar("orderCode", { length: 64 }).notNull(),
   orderItem: varchar("orderItem", { length: 32 }).notNull(),
   invoiceDate: timestamp("invoiceDate").notNull(),
@@ -78,6 +80,7 @@ export type InsertInvoice = typeof invoices.$inferInsert;
 // Client action tracking (Em Ação, Pedido na Tela, Excluído)
 export const clientActions = mysqlTable("client_actions", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   clientCodeSAP: varchar("clientCodeSAP", { length: 32 }).notNull(),
   repCode: varchar("repCode", { length: 32 }).notNull(),
   userId: int("userId").notNull(),
@@ -95,6 +98,7 @@ export type InsertClientAction = typeof clientActions.$inferInsert;
 // Notifications for in-app alerts
 export const notifications = mysqlTable("notifications", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   userId: int("userId").notNull(),
   repCode: varchar("repCode", { length: 32 }),
   type: mysqlEnum("type", ["cycle_alert", "inactivity_warning", "new_client", "general", "status_change", "funnel_change"]).notNull(),
@@ -115,6 +119,7 @@ export type InsertNotification = typeof notifications.$inferInsert;
 // Upload log
 export const uploadLogs = mysqlTable("upload_logs", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   userId: int("userId").notNull(),
   fileName: varchar("fileName", { length: 256 }).notNull(),
   rowsProcessed: int("rowsProcessed").default(0),
@@ -131,11 +136,11 @@ export type InsertUploadLog = typeof uploadLogs.$inferInsert;
 // Rep aliases for short display names and grouping (prepostos)
 export const repAliases = mysqlTable("rep_aliases", {
   id: int("id").autoincrement().primaryKey(),
-  repCode: varchar("repCode", { length: 32 }).notNull().unique(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
+  repCode: varchar("repCode", { length: 32 }).notNull(),
   repName: varchar("repName", { length: 256 }).notNull(),
   alias: varchar("alias", { length: 128 }).notNull(),
   parentRepCode: varchar("parentRepCode", { length: 32 }),
-  neCode: varchar("neCode", { length: 32 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -146,6 +151,7 @@ export type InsertRepAlias = typeof repAliases.$inferInsert;
 // Monthly sales goals per RC
 export const salesGoals = mysqlTable("sales_goals", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   repCode: varchar("repCode", { length: 32 }).notNull(),
   yearMonth: varchar("yearMonth", { length: 7 }).notNull(),
   goalKg: decimal("goalKg", { precision: 14, scale: 2 }).notNull(),
@@ -161,6 +167,7 @@ export type InsertSalesGoal = typeof salesGoals.$inferInsert;
 // RC invite tokens for linking users to repCodes
 export const rcInvites = mysqlTable("rc_invites", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   repCode: varchar("repCode", { length: 32 }).notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -177,6 +184,7 @@ export type InsertRcInvite = typeof rcInvites.$inferInsert;
 // Manager/Admin invites for onboarding gestores
 export const managerInvites = mysqlTable("manager_invites", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   usedAt: timestamp("usedAt"),
@@ -192,6 +200,7 @@ export type InsertManagerInvite = typeof managerInvites.$inferInsert;
 // Page view tracking for user activity monitoring
 export const pageViews = mysqlTable("page_views", {
   id: int("id").autoincrement().primaryKey(),
+  neCode: varchar("neCode", { length: 8 }).default("NE01").notNull(),
   userId: int("userId").notNull(),
   page: varchar("page", { length: 128 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
